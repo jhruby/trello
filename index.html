@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<div id="display" style="display:none;">
+<select id="board"></select>
+<textarea id="cards" style="display: block; width: 640px; height: 480px;">
+
+</textarea>
+<button type="button" id="create">Create</button>
+
+</div>
+
+
+<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+<script src="https://api.trello.com/1/client.js?key=09e15c9f6cde6332d79f0c69a1549492"></script>
+<script>
+	var authenticationSuccess = function() { 
+	Trello.members.get("/me/boards",function(boards)
+	{
+		var board = $("#board");
+		boards.forEach(function(val)
+		{
+			board.append("<option value='"+val.id+"'>"+val.name+"</option>");
+		});
+		
+		$("#display").show();
+	});
+	
+	$("#create").click(function()
+	{
+		$("#display").hide();
+
+		var cards = $("#cards").val().split("\n");
+		var board = $("#board").val();
+		
+		Trello.boards.get(board+"/lists", function(lists)
+		{
+		    var i = 0;
+			var firstList = lists[0].id;
+			cards.forEach(function(cardName)
+			{
+				if (cardName && cardName.length > 0)
+				{
+				++i;
+				Trello.post("cards", {
+					
+					due: null,
+					idList: firstList,
+					name: cardName
+				}, function(){
+					console.log("card created", cardName);
+					--i;
+					if (i === 0)
+					{
+						alert("cards created");
+						window.location.reload(true);
+					}
+				});
+				}
+			});
+		});
+	});
+	};	
+	var authenticationFailure = function() { alert("Failed authentication"); };
+	Trello.authorize({
+  type: 'popup',
+  name: 'Vytvařeč karet',
+  scope: {
+    read: 'true',
+    write: 'true' },
+  expiration: 'never',
+  success: authenticationSuccess,
+  error: authenticationFailure
+});
+
+</script>
+
